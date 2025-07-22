@@ -6,8 +6,9 @@ from infrastructure.search_infrastructure import SearchInfrastructure
 
 from fpdf import FPDF
 from io import BytesIO
+from field_config import FIELD_CONFIG
 import pdf_config as cfg
-
+import re
 app = Flask(__name__)
 LLM_INFRASTRUCTURE = LLMInfrastructure()
 SEARCH_INFRASTRUCTURE = SearchInfrastructure()
@@ -204,10 +205,62 @@ def datalist():
         {'dynamicFieldMappings': '', 'recordName': 's_P638684781: Khloe Kane', 'datalistPath': '726~', 'recordPath': '219544', 'FIELD_7143': '638684781', 'FIELD_20642': 'p638684781', 'FIELD_SEARCHABLE_20642': 'p638684781', 'FIELD_18471': 'active', 'FIELD_7146': 'khloe', 'FIELD_SEARCHABLE_7146': 'khloe', 'FIELD_7145': 'kane', 'FIELD_SEARCHABLE_7145': 'kane', 'FIELD_12459': 'khloe  kane', 'FIELD_20840': 'yes', 'FIELD_7149': '1989-01-10', 'FIELD_SEARCHABLE_7149': '1989-01-10', 'FIELD_20618': 'female', 'FIELD_SEARCHABLE_20618': 'female', 'FIELD_7148': 'female', 'DYNAMICFIELD_11977': '249128', 'DYNAMICFIELD_SEARCHABLE_11977': '249128', 'DYNAMICFIELD_20274': '245281', 'FIELD_37734': '2024-01-01', 'FIELD_20581': 'person', 'FIELD_20584': 'person', 'FIELD_37926': 'hinds', 'FIELD_SEARCHABLE_37926': 'hinds', 'FIELD_40134': '260048', 'DYNAMICFIELD_37733': '193076', 'FIELD_40135': '260048', 'FIELD_44855': 'person', 'FIELD_48270': 'known', 'FIELD_SEARCHABLE_48270': 'known'},
         {'dynamicFieldMappings': '', 'recordName': 's_P-1154697195: Janel Synan', 'datalistPath': '726~', 'recordPath': '237826', 'FIELD_7143': '1154697195', 'FIELD_20642': 'p1154697195', 'FIELD_SEARCHABLE_20642': 'p1154697195', 'FIELD_18471': 'active', 'FIELD_7146': 'janel', 'FIELD_SEARCHABLE_7146': 'janel', 'FIELD_7147': '2404111251102', 'FIELD_SEARCHABLE_7147': '2404111251102', 'FIELD_7145': 'synan', 'FIELD_SEARCHABLE_7145': 'synan', 'FIELD_12459': 'janel 2404111251102 synan', 'FIELD_20840': 'yes', 'FIELD_7149': '1985-01-01', 'FIELD_SEARCHABLE_7149': '1985-01-01', 'FIELD_36822': 'yes', 'FIELD_37906': '2023-10-31', 'FIELD_20618': 'female', 'FIELD_SEARCHABLE_20618': 'female', 'FIELD_7148': 'female', 'DYNAMICFIELD_11977': '194867', 'DYNAMICFIELD_SEARCHABLE_11977': '194867', 'DYNAMICFIELD_20274': '245281', 'FIELD_28331': '336610470', 'FIELD_SEARCHABLE_28331': '336610470', 'FIELD_37734': '2023-10-31', 'FIELD_40135': '237905', 'FIELD_20584': 'person', 'FIELD_20581': 'person', 'FIELD_40134': '237905', 'FIELD_37926': 'hinds', 'FIELD_SEARCHABLE_37926': 'hinds', 'FIELD_40307': 'janel.synan@fakeemail.com', 'DYNAMICFIELD_37733': '193076', 'FIELD_48270': 'known', 'FIELD_SEARCHABLE_48270': 'known'}
     ]
+
+    #we may call map_elastic_search_date_by_field_id(top_10[0]) here
+
     return jsonify({
         'response': f'You selected datalist: {selected}. Here is some dummy info for {selected}.',
         'top10': top_10
     }), 200
+
+def map_elastic_search_date_by_field_id(input_object):
+    """
+    Takes an object with FIELD_[number] keys and replaces them with the corresponding 
+    labels from the field configuration, ignoring keys with "FIELD_SEARCHABLE" or "DYNAMICFIELD".
+
+    Args:
+        input_object (dict): Dictionary containing keys like 'FIELD_7143', 'FIELD_20642', etc.
+
+    Returns:
+        dict: New dictionary with field keys replaced by their corresponding labels
+    """
+
+    # Create a mapping dictionary from field ID to label
+    field_id_to_label = {}
+    for field in FIELD_CONFIG:
+        field_id_to_label[field['FieldID']] = field['Label']
+
+    # Create a new dictionary to store the mapped results
+    mapped_object = {}
+
+    # Pattern to match FIELD_[number] keys
+    field_pattern = re.compile(r'^FIELD_(\d+)$')
+
+    for key, value in input_object.items():
+        # Skip keys with "FIELD_SEARCHABLE" or "DYNAMICFIELD"
+        if "FIELD_SEARCHABLE" in key or "DYNAMICFIELD" in key:
+            continue
+
+        # Check if the key matches the FIELD_[number] pattern
+        match = field_pattern.match(key)
+        
+        if match:
+            # Extract the field ID number
+            field_id = int(match.group(1))
+            
+            # Look up the corresponding label
+            if field_id in field_id_to_label:
+                # Use the label as the new key
+                new_key = field_id_to_label[field_id]
+                mapped_object[new_key] = value
+            else:
+                # If field ID not found in config, keep original key
+                mapped_object[key] = value
+        else:
+            # If key doesn't match pattern, keep it as is
+            mapped_object[key] = value
+
+    return mapped_object  
 
 def summarize_knowledge_base(knowledge_base):
     """
