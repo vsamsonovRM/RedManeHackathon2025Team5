@@ -8,7 +8,10 @@ import axios from "axios";
 import InitialDatalistRadioGroup from "./InitialDatalistRadioGroup";
 import Top10DatalistRadioGroup from "./Top10DatalistRadioGroup";
 
-const initialOptions = ["Persons", "Persons 2", "Persons 3"];
+const initialOptions = [{
+    label: "Persons",
+    id:"726"
+}];
 
 const ChatInterface = () => {
   const [selectedOption, setSelectedOption] = useState("");
