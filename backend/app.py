@@ -29,8 +29,16 @@ def health():
 @app.route('/api/chat', methods=['POST'])
 def chat():
     data = request.get_json()
-    user_input = data.get('chat')  # Get "chat" from POST body
-    response = LLM_INFRASTRUCTURE.get_response(user_input)
+    user_message = data.get('chat')
+    knowledge_base = data.get('knowledgeBase')  # This is your sampleData.json
+
+    # Convert knowledge base to a string or summary for the prompt
+    kb_context = summarize_knowledge_base(knowledge_base)  # You need to implement this
+
+    # Combine context and user message
+    prompt = f"Knowledge base: {kb_context}\nUser: {user_message}"
+
+    response = LLM_INFRASTRUCTURE.get_response(prompt)
     return jsonify({"response": response}), 200
 
 
@@ -161,6 +169,28 @@ def generate_pdf():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+def summarize_knowledge_base(knowledge_base):
+    """
+    Summarize the knowledge base JSON into a readable string for the LLM prompt.
+    This example summarizes roles and permissions for each entry.
+    """
+    if not knowledge_base:
+        return "No knowledge base provided."
+    summary_lines = []
+    for entry in knowledge_base:
+        name = entry.get("Name", [{}])[0].get("Value", "Unknown")
+        summary_lines.append(f"Entity: {name}")
+        roles = entry.get("ListRoles", [])
+        for role in roles:
+            role_name = role.get("RoleName", "Unknown Role")
+            perms = []
+            for perm in ["CanEdit", "CanAdd", "CanDelete", "CanBulkEdit", "CanMove", "CanMerge", "IsListAdmin"]:
+                if role.get(perm):
+                    perms.append(perm)
+            perms_str = ", ".join(perms) if perms else "No special permissions"
+            summary_lines.append(f"  - {role_name}: {perms_str}")
+    return "\n".join(summary_lines)
 
 if __name__ == '__main__':
     app.run(debug=True)

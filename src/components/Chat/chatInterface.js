@@ -3,9 +3,7 @@ import "./chatInterface.css";
 import { checkBackendHealth } from "../../services/health";
 import { sendChatMessage } from "../../services/chat";
 import GeneratePDF from "../GeneratePDF";
-
-
-
+import sampleData from "../../data/sampleData.json"; 
 const ChatInterface = () => {
   const [messages, setMessages] = useState([
     { sender: "bot", text: "Hello! How can I help you today?" }
@@ -32,8 +30,8 @@ const ChatInterface = () => {
     const userMsg = { sender: "user", text: input };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
-    // Send to backend chat service
-    const botReply = await sendChatMessage(input);
+    // Send to backend chat service, including sampleData as knowledge base
+    const botReply = await sendChatMessage(input, sampleData);
     setMessages((prev) => [
       ...prev,
       { sender: "bot", text: (
