@@ -17,6 +17,17 @@ async function getHealthStatus() {
   }
 }
 
+const sendChat = async () => {
+  try {
+    const res = await axios.post('/api/chat', {
+      chat: 'Hello, how are you?'
+    });
+    console.log(res.data.response);
+  } catch (err) {
+    console.error('Error sending chat:', err);
+  }
+};
+
 getHealthStatus().then((status) => {
   const HEALTH_CONSTANT = status;
   console.log('Stored Health Constant:', HEALTH_CONSTANT);
@@ -40,6 +51,7 @@ getHealthStatus().then((status) => {
         >
           Learn React
         </a>
+        <button onClick={sendChat}>Hello</button>
       </header>
     </div>
   );

@@ -17,27 +17,31 @@ openai_model = os.getenv("OPENAI_MODEL_NAME")
 es_password = os.getenv("ES_PASSWORD")
 es_fingerprint = os.getenv("ES_FINGERPRINT")
 es_http = os.getenv("ES_HTTP")
-print("api keys here: \n\n\n\:")
-print(api_key)
 
-payload = {
-        "messages": [
-            {
-            "role": "user",
-            "content": f'''You are an assistant, introduce yourself '''
-            ""
-            }
-        ],
-        "temperature": 0,
-        "top_p": 1,
-        "frequency_penalty": 0
-}
+
+def generate_user_payload(prompt):
+    
+    payload = {
+            "messages": [
+                {
+                "role": "system",
+                "content": f'''You are an assistant'''
+                ""
+                },
+                {
+                "role": "user",
+                "content": f'''{prompt}'''
+                ""
+                }
+            ],
+            "temperature": 0,
+            "top_p": 1,
+            "frequency_penalty": 0
+    }
+    return payload
 
 class LLMInfrastructure:
     def __init__(self):
-
-        print("s")
-
         self.client  = ChatCompletionsClient(
             endpoint=openai_url,
             credential=AzureKeyCredential(api_key)
@@ -47,10 +51,15 @@ class LLMInfrastructure:
         messages = []
         messages.append({"role": "system", "content": "you are a chatbot"})
         messages.append({"role": "user", "content": "introduce yourself"})
-        
-        response = self.client.complete(payload)
-        print(response)
+
+    
+    def get_response(self, prompt):
+        curr_payload = generate_user_payload(prompt)
+        client_output = self.client.complete(curr_payload)
+        output = client_output.choices[0].message.content
+        print(output)
+        return output
         
         
 llm_infrastructure = LLMInfrastructure()
-llm_infrastructure.respond()
+llm_infrastructure.get_response("What is your name")
