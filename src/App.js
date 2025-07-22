@@ -4,7 +4,7 @@ import { useState } from 'react';
 import axios from 'axios';
 
 function App() {
-
+const [currMessage, setCurrMessage] = useState();
 async function getHealthStatus() {
   try {
     const response = await axios.get('/health');
@@ -20,9 +20,10 @@ async function getHealthStatus() {
 const sendChat = async () => {
   try {
     const res = await axios.post('/api/chat', {
-      chat: 'Hello, how are you?'
+      chat: 'what is your name'
     });
     console.log(res.data.response);
+    setCurrMessage(res.data.response)
   } catch (err) {
     console.error('Error sending chat:', err);
   }
@@ -43,7 +44,6 @@ getHealthStatus().then((status) => {
         </p>
        
         <a
-       
           className="App-link"
           href="https://reactjs.org"
           target="_blank"
@@ -52,6 +52,7 @@ getHealthStatus().then((status) => {
           Learn React
         </a>
         <button onClick={sendChat}>Hello</button>
+        <text>{currMessage}</text>
       </header>
     </div>
   );

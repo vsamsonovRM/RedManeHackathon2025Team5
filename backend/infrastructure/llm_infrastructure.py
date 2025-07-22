@@ -9,20 +9,20 @@ from azure.core.credentials import AzureKeyCredential
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# sAzureEndpoint: https://rm-shared-open-ai.openai.azure.com Model: GPT-4.1-mini Deployment: gpt-4.1-mini Version: 2025-04-14 Key: 6e4d8096797d4ef6a19a834f92e97103
 api_key = os.getenv("AZURE_INFERENCE_CREDENTIAL")
 
 openai_api_key = os.getenv("OPENAI_API_KEY")
-openai_url = os.getenv("OPENAI_URL")
-openai_model = os.getenv("OPENAI_MODEL_NAME")
+openai_api_key = "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"
+
+openai_model = "gpt-4.1-nano"
 es_password = os.getenv("ES_PASSWORD")
 es_fingerprint = os.getenv("ES_FINGERPRINT")
 es_http = os.getenv("ES_HTTP")
 
-
 def generate_user_payload(prompt):
-    
-    payload = {
-            "messages": [
+    messages =  [
                 {
                 "role": "system",
                 "content": f'''You are an assistant'''
@@ -33,20 +33,16 @@ def generate_user_payload(prompt):
                 "content": f'''{prompt}'''
                 ""
                 }
-            ],
-            "temperature": 0,
-            "top_p": 1,
-            "frequency_penalty": 0
-    }
-    return payload
+            ]
+    return messages
 
+
+openai.api_key = openai_api_key
 class LLMInfrastructure:
     def __init__(self):
-        self.client  = ChatCompletionsClient(
-            endpoint=openai_url,
-            credential=AzureKeyCredential(api_key)
-        )
+        self.client = openai # See if we will use it
 
+        
     def respond(self):
         messages = []
         messages.append({"role": "system", "content": "you are a chatbot"})
@@ -54,8 +50,12 @@ class LLMInfrastructure:
 
     
     def get_response(self, prompt):
-        curr_payload = generate_user_payload(prompt)
-        client_output = self.client.complete(curr_payload)
+        curr_messages = generate_user_payload(prompt)
+        client_output = openai.chat.completions.create(
+        model=openai_model,
+        messages=curr_messages
+    )
+        print(f"COmpleted \n\n\n\n")
         output = client_output.choices[0].message.content
         print(output)
         return output
