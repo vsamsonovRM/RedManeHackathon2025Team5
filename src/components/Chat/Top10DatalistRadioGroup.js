@@ -1,27 +1,70 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 function Top10DatalistRadioGroup({ options, selectedOption, updateState, onSelect }) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState(options);
+
+
+  useEffect(() => {
+    if (searchTerm === "") {
+      setSearchResults(options);
+      return;
+    }
+
+    const fetchSearchResults = async () => {
+      try {
+        const response = await axios.post("/api/search", {
+          search_term: searchTerm,
+          data_list_id: 726,
+        });
+        // Assuming response.data is an array of options
+        console.log(response.data)
+        const searchResultsCurr = response.data.response.map((result, idx) => (
+          <div key={idx}>RecordName: {result.recordName}</div>
+        ));
+        setSearchResults(searchResultsCurr);
+        
+        
+      } catch (error) {
+        console.error("Search API error:", error);
+        // optionally reset or handle error state
+      }
+    };
+
+    fetchSearchResults();
+  }, [searchTerm, options]);
+
+  const handleInputChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
   return (
     <>
-    <input type="text" placeholder="Select a top 10 datalist option"></input>
-    <div role="radiogroup" aria-label="Top 10 Datalist options" className="chat-radio-group">
-      {options.map(opt => (
-        <label key={opt} style={{ display: 'block', margin: '0.3em 0' }}>
-          <input
-            type="radio"
-            name="top10datalist"
-            value={opt}
-            checked={selectedOption === opt}
-            disabled={updateState}
-            onChange={onSelect}
-            style={{ marginRight: 8 }}
-          />
-          {opt}
-        </label>
-      ))}
-    </div>
+      <input
+        type="text"
+        placeholder="Select a top 10 datalist option"
+        value={searchTerm}
+        onChange={handleInputChange}
+      />
+      <div role="radiogroup" aria-label="Top 10 Datalist options" className="chat-radio-group">
+        {searchResults}
+        {/* {searchResults.map((opt) => (
+          <label key={opt} style={{ display: "block", margin: "0.3em 0" }}>
+            <input
+              type="radio"
+              name="top10datalist"
+              value={opt}
+              checked={selectedOption === opt}
+              disabled={updateState}
+              onChange={onSelect}
+              style={{ marginRight: 8 }}
+            />
+            {opt}
+          </label>
+        ))} */}
+      </div>
     </>
-    
   );
 }
 
