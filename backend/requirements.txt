@@ -45,4 +45,5 @@ chromadb
 
 # reranking
 flashrank
+elasticsearch==8.17.0
 *.env

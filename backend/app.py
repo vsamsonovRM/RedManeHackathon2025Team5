@@ -1,17 +1,23 @@
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 from infrastructure.llm_infrastructure import LLMInfrastructure
+
+from infrastructure.search_infrastructure import SearchInfrastructure
+
 from fpdf import FPDF
 from io import BytesIO
 import pdf_config as cfg
+
 app = Flask(__name__)
 LLM_INFRASTRUCTURE = LLMInfrastructure()
-# AzureEndpoint: https://rm-shared-open-ai.openai.azure.com Model: GPT-4.1-mini Deployment: gpt-4.1-mini Version: 2025-04-14 Key: 6e4d8096797d4ef6a19a834f92e97103
+SEARCH_INFRASTRUCTURE = SearchInfrastructure()
+
 CORS(app)
 # Home route
 @app.route('/')
 def home():
     return "Welcome to the Flask app!"
+
 
 # Example API route
 @app.route('/api/echo', methods=['POST'])
@@ -21,10 +27,12 @@ def echo():
         "you_sent": data
     })
 
+
 # Health check route
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({"status": "OK"}), 200
+
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
@@ -41,6 +49,15 @@ def chat():
     response = LLM_INFRASTRUCTURE.get_response(prompt)
     return jsonify({"response": response}), 200
 
+
+
+@app.route('/api/search', methods=['POST'])
+def search():
+    data = request.get_json()
+    user_input = data.get('search_term')  # Get "chat" from POST body
+    data_list_id = data.get('data_list_id')
+    response = SEARCH_INFRASTRUCTURE.search_record(user_input, data_list_id)
+    return jsonify({"response": response}), 200
 
 class CustomPDF(FPDF):
     def __init__(self):
@@ -208,6 +225,7 @@ def summarize_knowledge_base(knowledge_base):
             perms_str = ", ".join(perms) if perms else "No special permissions"
             summary_lines.append(f"  - {role_name}: {perms_str}")
     return "\n".join(summary_lines)
+
 
 
 

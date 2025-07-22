@@ -1,104 +1,55 @@
-import os
-from typing import Optional
-from openai import AsyncAzureOpenAI, AzureOpenAI
+import asyncio
+from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.azure import AzureProvider
-from pydantic_ai import Agent
+from openai import AsyncAzureOpenAI, AzureOpenAI
 from dotenv import load_dotenv
+import os
+
 load_dotenv()
 
-def generate_user_payload(prompt):
-    messages =  [
-                {
-                "role": "system",
-                "content": f'''You are an assistant'''
-                ""
-                },
-                {
-                "role": "user",
-                "content": f'''{prompt}'''
-                ""
-                }
-            ]
-    return messages
+# Setup Azure OpenAI Client and Model
+client = AzureOpenAI(
+    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+    api_key=os.getenv("AZURE_OPENAI_KEY"),
+    api_version="2024-05-01-preview"
+)
 
+model = OpenAIModel(
+    provider=AzureProvider(openai_client=client),
+    model_name="gpt-4",  # or your deployed Azure model name
+)
 
-class OpenAIAgentBase:
-    """Base class for OpenAI-powered agents with shared configuration and model setup."""
-    
-    def __init__(self):
-        """Initialize the base agent with Azure OpenAI configuration."""
-        self._model: Optional[OpenAIModel] = None
-        self._agent: Optional[Agent] = None
-    
-    def _get_azure_config(self) -> tuple[str, str, str, str]:
-        """
-        Get Azure OpenAI configuration from environment variables.
-        
-        Returns:
-            Tuple of (endpoint, key, api_version, deployment)
-            
-        Raises:
-            ValueError: If required environment variables are missing
-        """
-        endpoint = os.getenv('AZURE_OPENAI_ENDPOINT')
-        key = os.getenv('AZURE_OPENAI_KEY')
-        api_version = os.getenv('AZURE_OPENAI_API_VERSION', '2024-07-01-preview')
-        deployment = os.getenv('AZURE_OPENAI_DEPLOYMENT')
-        
-        missing = [k for k, v in [
-            ("AZURE_OPENAI_ENDPOINT", endpoint),
-            ("AZURE_OPENAI_KEY", key),
-            ("AZURE_OPENAI_DEPLOYMENT", deployment),
-        ] if not (v and isinstance(v, str) and v.strip())]
-        
-        if missing:
-            raise ValueError(f"Missing Azure OpenAI config: {', '.join(missing)}. Please set these in your environment or .env file.")
-        
-        # All are present and non-empty strings
-        return str(endpoint), str(key), str(api_version), str(deployment)
-    
-    def _get_azure_model(self):
-        """
-        Get the Azure OpenAI model instance.
-        
-        Returns:
-            Configured OpenAIModel instance
-            
-        Raises:
-            ValueError: If Azure configuration is invalid
-        """
-        if self._model is None:
-            endpoint, key, api_version, deployment = self._get_azure_config()
-            client = AzureOpenAI(
-                azure_endpoint=endpoint,
-                api_version=api_version,
-                api_key=key,
-            )
-            self._model = OpenAIModel(
-                deployment,  # This is the deployment name, not the model name!
-                provider=AzureProvider(openai_client=client),
-            )
-        curr_messages  =[
-                {
-                "role": "system",
-                "content": f'''You are an assistant'''
-                ""
-                },
-                {
-                "role": "user",
-                "content": f'''{"Hello"}'''
-                ""
-                }
-            ]
-        client.chat.completions.create(
-        messages=curr_messages,
-        model = deployment
-        )
-        return self._model
-   
+# === Agents ===
+proposer_agent = Agent(model=model, instructions="You are a JSON generator. Improve your JSON based on feedback. Only output raw JSON.")
+validator_agent = Agent(model=model, instructions="You are a JSON validator. Review the JSON and respond with feedback. If it's valid, say: 'Valid JSON.'")
 
-agent_base = OpenAIAgentBase()
-model = agent_base._get_azure_model()
+def json_refinement_loop():
+    schema_description = """
+Create a JSON object representing a user with the following fields:
+- name: string
+- age: integer
+- interests: list of strings
+Return only the JSON object.
+"""
+    current_json = proposer_agent.run(schema_description)
+    print("Initial Proposal:\n", current_json)
 
- 
+    MAX_TURNS = 5
+    for turn in range(MAX_TURNS):
+        print(f"\n--- Turn {turn + 1} ---")
+        feedback = validator_agent.run(current_json)
+        
+        print("Validator Feedback:\n", feedback)
+
+        if "valid" in feedback.lower():
+            print("\n✅ Final JSON Accepted:\n", current_json)
+            return current_json
+
+        current_json = proposer_agent(feedback)
+
+    print("\n⚠️ Max turns reached. Final JSON may still need review.")
+    return current_json
+
+if __name__ == "__main__":
+    json_refinement_loop()
