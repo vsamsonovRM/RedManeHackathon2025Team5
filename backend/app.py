@@ -65,6 +65,14 @@ def search():
     # ]
     return jsonify({"response": response}), 200
 
+
+@app.route('/api/generate_pdf_content', methods=['POST'])
+def generate_pdf_content():
+    data = request.get_json()
+    mapped_json = data.get('mapped_json')  # Get "chat" from POST body
+    response = LLM_INFRASTRUCTURE.generate_pdf_structure(mapped_json)
+    return jsonify({"response": response}), 200
+
 class CustomPDF(FPDF):
     def __init__(self):
         super().__init__()
