@@ -1,5 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./chatInterface.css";
+import { checkBackendHealth } from "../../services/health";
+import GeneratePDF from "../GeneratePDF";
+
+
 
 const ChatInterface = () => {
   const [messages, setMessages] = useState([
@@ -8,8 +12,20 @@ const ChatInterface = () => {
   const [input, setInput] = useState("");
   const messagesEndRef = useRef(null);
 
+  const [status, setStatus] = useState(null);
+  
+    useEffect(() => {
+      let mounted = true;
+      checkBackendHealth().then((res) => {
+        if (mounted) setStatus(res.status);
+      });
+      return () => { mounted = false; };
+    }, []);
+
+    const [responseStatus,setResponseStatus] = useState(false);
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setResponseStatus(true);
   }, [messages]);
 
   const handleSend = (e) => {
@@ -23,7 +39,12 @@ const ChatInterface = () => {
     setTimeout(() => {
       setMessages((prev) => [
         ...prev,
-        { sender: "bot", text: "You said: " + input }
+        { sender: "bot", text: (
+            <span>
+              You said: {input} 
+              {responseStatus && <GeneratePDF />}
+            </span>
+          ) }
       ]);
     }, 600);
     setInput("");
@@ -41,6 +62,9 @@ const ChatInterface = () => {
           </div>
         ))}
         <div ref={messagesEndRef} />
+      </div>
+      <div className="chat-status-bar">
+        Backend status: <span className={`status-badge ${status === 'OK' ? 'ok' : status === 'ERROR' ? 'error' : 'checking'}`}>{status || 'Checking...'}</span>
       </div>
       <form className="chat-input-form" onSubmit={handleSend}>
         <input

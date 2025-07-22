@@ -1,0 +1,10 @@
+.main-header {
+  background: #222;
+  color: #fff;
+  font-size: 2rem;
+  font-weight: bold;
+  padding: 1.5rem 0;
+  text-align: center;
+  letter-spacing: 2px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
