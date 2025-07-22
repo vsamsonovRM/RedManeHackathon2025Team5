@@ -67,7 +67,6 @@ def generate_user_payload(prompt):
 
 class LLMInfrastructure:
     def __init__(self):
-        
         self.client = AzureOpenAI(
                 azure_endpoint=endpoint,
                 api_version=api_version,
@@ -87,29 +86,28 @@ class LLMInfrastructure:
         messages=curr_messages
     )
         output = client_output.choices[0].message.content
-        print(output)
         return output
 
     
-    def json_validation(self, content):
-        proposer_messages = generate_proposer_messages(content)
-        curr_json = None
-        for i in range(3):
-            print(f"Attempt: {i+1}")
-            curr_json = self.client.chat.completions.create(
-                model=openai_model,
-                messages=curr_messages
-            )
+    # def json_validation(self, content):
+    #     proposer_messages = generate_proposer_messages(content)
+    #     curr_json = None
+    #     for i in range(3):
+    #         print(f"Attempt: {i+1}")
+    #         curr_json = self.client.chat.completions.create(
+    #             model=openai_model,
+    #             messages=curr_messages
+    #         )
 
-        curr_messages = generate_user_payload(prompt)
-        client_output = self.client.chat.completions.create(
-        model=openai_model,
-        messages=curr_messages
-    )
-        output = client_output.choices[0].message.content
-        print(output)
-        return output
+    #     curr_messages = generate_user_payload(prompt)
+    #     client_output = self.client.chat.completions.create(
+    #     model=openai_model,
+    #     messages=curr_messages
+    # )
+    #     output = client_output.choices[0].message.content
+    #     print(output)
+    #     return output
         
         
-llm_infrastructure = LLMInfrastructure()
-llm_infrastructure.get_response("What is your name")
+# llm_infrastructure = LLMInfrastructure()
+# llm_infrastructure.get_response("What is your name")
