@@ -54,9 +54,9 @@ const ChatInterface = () => {
           ...prev,
           { sender: "bot", text: res.data.response }
         ]);
-        // If backend returns array of objects, map to recordName
+        // If backend returns array of objects, keep the entire object
         if (Array.isArray(res.data.top10) && res.data.top10.length > 0 && typeof res.data.top10[0] === 'object') {
-          setTopDatalists(res.data.top10.map(item => item.recordName));
+          setTopDatalists(res.data.top10);
         } else if (Array.isArray(res.data.top10)) {
           setTopDatalists(res.data.top10);
         }
@@ -79,9 +79,11 @@ const ChatInterface = () => {
         ...prev,
         { sender: "bot", text: `You selected top datalist: ${value}` }
       ]);
+      // Find the full object for the selected value
+      const selectedObj = topDatalists.find(obj => obj.recordName === value);
       // Call backend service for selected top datalist
       try {
-        const res = await selectTopDatalist(value);
+        const res = await selectTopDatalist(selectedObj || value);
         setMessages(prev => [
           ...prev,
           { sender: "bot", text: res?.response || "Record selection acknowledged." }
@@ -137,7 +139,7 @@ const ChatInterface = () => {
               <div style={{ marginTop: 16 }}>
                 <div style={{ fontWeight: 'bold', marginBottom: 4 }}>Search for records:</div>
                 <Top10DatalistRadioGroup
-                  options={topDatalists}
+                  options={topDatalists.map(obj => obj.recordName)}
                   selectedOption={selectedTopDatalist}
                   updateState={topDatalistDisabled}
                   onSelect={handleTopDatalistChange}

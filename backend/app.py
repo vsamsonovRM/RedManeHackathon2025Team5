@@ -63,6 +63,8 @@ def selected_record():
         return jsonify({'error': 'No record selected'}), 400
     
 
+
+    print(f"Selected Record: {selected_record}")
     # set context for the LLM here: 
     # Mocked response for the selected record
     response = {
