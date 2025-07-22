@@ -1,74 +1,104 @@
-from langchain.document_loaders import TextLoader
-from langchain.text_splitter import CharacterTextSplitter
-from langchain.vectorstores import ElasticsearchStore
-from langchain.embeddings import OpenAIEmbeddings
-from langchain_openai import ChatOpenAI
-from langchain.chains import RetrievalQA
 import os
-import openai
+from typing import Optional
+from openai import AsyncAzureOpenAI, AzureOpenAI
+from pydantic_ai.models.openai import OpenAIModel
+from pydantic_ai.providers.azure import AzureProvider
+from pydantic_ai import Agent
 from dotenv import load_dotenv
-import warnings
-
 load_dotenv()
-llm = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature=0)
-api_key = os.getenv("OPENAI_API_KEY")
-es_password = os.getenv("ES_PASSWORD")
-es_fingerprint = os.getenv("ES_FINGERPRINT")
-es_http = os.getenv("ES_HTTP")
 
-openai.api_key = os.getenv("OPEN_AI_API_KEY")
+def generate_user_payload(prompt):
+    messages =  [
+                {
+                "role": "system",
+                "content": f'''You are an assistant'''
+                ""
+                },
+                {
+                "role": "user",
+                "content": f'''{prompt}'''
+                ""
+                }
+            ]
+    return messages
 
-class mCase_GPT:
+
+class OpenAIAgentBase:
+    """Base class for OpenAI-powered agents with shared configuration and model setup."""
+    
     def __init__(self):
-        self.chain = create_chain()
-
-    def query(self, query):
-        result = self.chain({"query": query})
-        output = result['result']
-        print(f"\n{output}\n")
-        return result['result'], result
-
-
-def create_chain():
-    warnings.filterwarnings("ignore")
-    llm = OpenAI(openai_api_key=api_key)
-    embeddings = OpenAIEmbeddings(openai_api_key=api_key)
-    openai.api_key = api_key
+        """Initialize the base agent with Azure OpenAI configuration."""
+        self._model: Optional[OpenAIModel] = None
+        self._agent: Optional[Agent] = None
     
-def query(self, query):
-        result = self.llm(query)
-        print(result)
+    def _get_azure_config(self) -> tuple[str, str, str, str]:
+        """
+        Get Azure OpenAI configuration from environment variables.
+        
+        Returns:
+            Tuple of (endpoint, key, api_version, deployment)
+            
+        Raises:
+            ValueError: If required environment variables are missing
+        """
+        endpoint = os.getenv('AZURE_OPENAI_ENDPOINT')
+        key = os.getenv('AZURE_OPENAI_KEY')
+        api_version = os.getenv('AZURE_OPENAI_API_VERSION', '2024-07-01-preview')
+        deployment = os.getenv('AZURE_OPENAI_DEPLOYMENT')
+        
+        missing = [k for k, v in [
+            ("AZURE_OPENAI_ENDPOINT", endpoint),
+            ("AZURE_OPENAI_KEY", key),
+            ("AZURE_OPENAI_DEPLOYMENT", deployment),
+        ] if not (v and isinstance(v, str) and v.strip())]
+        
+        if missing:
+            raise ValueError(f"Missing Azure OpenAI config: {', '.join(missing)}. Please set these in your environment or .env file.")
+        
+        # All are present and non-empty strings
+        return str(endpoint), str(key), str(api_version), str(deployment)
     
-    
+    def _get_azure_model(self):
+        """
+        Get the Azure OpenAI model instance.
+        
+        Returns:
+            Configured OpenAIModel instance
+            
+        Raises:
+            ValueError: If Azure configuration is invalid
+        """
+        if self._model is None:
+            endpoint, key, api_version, deployment = self._get_azure_config()
+            client = AzureOpenAI(
+                azure_endpoint=endpoint,
+                api_version=api_version,
+                api_key=key,
+            )
+            self._model = OpenAIModel(
+                deployment,  # This is the deployment name, not the model name!
+                provider=AzureProvider(openai_client=client),
+            )
+        curr_messages  =[
+                {
+                "role": "system",
+                "content": f'''You are an assistant'''
+                ""
+                },
+                {
+                "role": "user",
+                "content": f'''{"Hello"}'''
+                ""
+                }
+            ]
+        client.chat.completions.create(
+        messages=curr_messages,
+        model = deployment
+        )
+        return self._model
+   
 
-gpt = mCase_GPT()
-gpt.query("hello")
-# import openai
-# from openai import AzureOpenAI
+agent_base = OpenAIAgentBase()
+model = agent_base._get_azure_model()
 
-# # Set your Azure OpenAI credentials
-# openai.api_type = "azure"
-# openai.api_base = "https://victo-m9k0iyi6-eastus2.cognitiveservices.azure.com/openai/deployments/gpt-4.1-nano"
-# openai.api_version = "2025-04-14"
-# openai.api_key = "6e4d8096797d4ef6a19a834f92e97103"
-
-# # Your deployment name
-# deployment_name = "gpt-4.1-mini"
-
-# client = AzureOpenAI(
-#     api_key="6e4d8096797d4ef6a19a834f92e97103",
-#     api_version="2025-04-14",
-#     azure_endpoint="https://rm-shared-open-ai.openai.azure.com",
-# )
-
-# # Call the model
-# response = client.chat.completions.create(
-#     model="gpt-4.1-mini",  # This is the *deployment name* in Azure
-#     messages=[
-#         {"role": "system", "content": "You are a helpful assistant."},
-#         {"role": "user", "content": "What is the capital of France?"}
-#     ],
-# )
-# # Print the response
-# print("response")
-# print(response['choices'][0]['message']['content'])
+ 
