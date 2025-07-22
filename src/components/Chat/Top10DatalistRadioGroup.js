@@ -21,7 +21,7 @@ function Top10DatalistRadioGroup({ options, selectedOption, updateState, onSelec
         // Assuming response.data is an array of options
         console.log(response.data)
         const searchResultsCurr = response.data.response.map((result, idx) => (
-          <div key={idx}>RecordName: {result.recordName}</div>
+          <div key={idx}>RecordName: {result.recordName}</div> 
         ));
         setSearchResults(searchResultsCurr);
         
@@ -49,20 +49,6 @@ function Top10DatalistRadioGroup({ options, selectedOption, updateState, onSelec
       />
       <div role="radiogroup" aria-label="Top 10 Datalist options" className="chat-radio-group">
         {searchResults}
-        {/* {searchResults.map((opt) => (
-          <label key={opt} style={{ display: "block", margin: "0.3em 0" }}>
-            <input
-              type="radio"
-              name="top10datalist"
-              value={opt}
-              checked={selectedOption === opt}
-              disabled={updateState}
-              onChange={onSelect}
-              style={{ marginRight: 8 }}
-            />
-            {opt}
-          </label>
-        ))} */}
       </div>
     </>
   );
