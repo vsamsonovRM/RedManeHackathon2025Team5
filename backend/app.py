@@ -4,7 +4,7 @@ from infrastructure.llm_infrastructure import LLMInfrastructure
 
 app = Flask(__name__)
 LLM_INFRASTRUCTURE = LLMInfrastructure()
-# AzureEndpoint: https://rm-shared-open-ai.openai.azure.com Model: GPT-4.1-mini Deployment: gpt-4.1-mini Version: 2025-04-14 Key: 6e4d8096797d4ef6a19a834f92e97103
+
 CORS(app)
 # Home route
 @app.route('/')

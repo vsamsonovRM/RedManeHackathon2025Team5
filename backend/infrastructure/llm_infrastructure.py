@@ -12,13 +12,42 @@ load_dotenv()
 
 openai_model = "gpt-4.1-mini"
 es_password = os.getenv("ES_PASSWORD")
-es_fingerprint = os.getenv("ES_FINGERPRINT")
-es_http = os.getenv("ES_HTTP")
 
 endpoint = os.getenv('AZURE_OPENAI_ENDPOINT')
 key = os.getenv('AZURE_OPENAI_KEY')
 api_version = os.getenv('AZURE_OPENAI_API_VERSION', '2024-07-01-preview')
 deployment = os.getenv('AZURE_OPENAI_DEPLOYMENT')
+
+def generate_proposer_messages(prompt):
+    messages =  [
+                {
+                "role": "system",
+                "content": f'''You are a JSON generator. Improve your JSON based on feedback. Only output raw JSON with brackets <OUTPUT> ... <OUTPUT>'''
+                ""
+                },
+                {
+                "role": "user",
+                "content": f'''{prompt}'''
+                ""
+                }
+            ]
+    return messages
+
+def generate_proposer_messages(prompt):
+    messages =  [
+                {
+                "role": "system",
+                "content": f'''You are a JSON validator. Review the JSON and respond with feedback. If it's valid, say: 'Valid JSON.'''
+                ""
+                },
+                {
+                "role": "user",
+                "content": f'''{prompt}'''
+                ""
+                }
+            ]
+    return messages
+
 
 def generate_user_payload(prompt):
     messages =  [
@@ -52,6 +81,26 @@ class LLMInfrastructure:
 
     
     def get_response(self, prompt):
+        curr_messages = generate_user_payload(prompt)
+        client_output = self.client.chat.completions.create(
+        model=openai_model,
+        messages=curr_messages
+    )
+        output = client_output.choices[0].message.content
+        print(output)
+        return output
+
+    
+    def json_validation(self, content):
+        proposer_messages = generate_proposer_messages(content)
+        curr_json = None
+        for i in range(3):
+            print(f"Attempt: {i+1}")
+            curr_json = self.client.chat.completions.create(
+                model=openai_model,
+                messages=curr_messages
+            )
+
         curr_messages = generate_user_payload(prompt)
         client_output = self.client.chat.completions.create(
         model=openai_model,
