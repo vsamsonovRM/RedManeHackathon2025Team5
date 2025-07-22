@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./chatInterface.css";
 import { checkBackendHealth } from "../../services/health";
+import { sendChatMessage } from "../../services/chat";
 import GeneratePDF from "../GeneratePDF";
 
 
@@ -11,7 +12,6 @@ const ChatInterface = () => {
   ]);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef(null);
-
   const [status, setStatus] = useState(null);
   
     useEffect(() => {
@@ -22,32 +22,26 @@ const ChatInterface = () => {
       return () => { mounted = false; };
     }, []);
 
-    const [responseStatus,setResponseStatus] = useState(false);
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    setResponseStatus(true);
   }, [messages]);
 
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
+    const userMsg = { sender: "user", text: input };
+    setMessages((prev) => [...prev, userMsg]);
+    setInput("");
+    // Send to backend chat service
+    const botReply = await sendChatMessage(input);
     setMessages((prev) => [
       ...prev,
-      { sender: "user", text: input }
+      { sender: "bot", text: (
+        <span>
+          {botReply ? botReply : "Sorry, no response."} <GeneratePDF />
+        </span>
+      ) }
     ]);
-    // Simulate bot response
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { sender: "bot", text: (
-            <span>
-              You said: {input} 
-              {responseStatus && <GeneratePDF />}
-            </span>
-          ) }
-      ]);
-    }, 600);
-    setInput("");
   };
 
   return (
