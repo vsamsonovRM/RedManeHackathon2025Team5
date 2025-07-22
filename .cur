@@ -1,0 +1,33 @@
+# Cursor File: mGenerate – AI-Driven PDF Generation for mCase
+
+## Category
+Internal RedMane solution for cross-departmental use (delivery, legal, finance, sales, HR, security, etc.)
+
+---
+
+## Problem
+Development and configuration teams spend excessive hours manually coding documents in mCase to compile person-specific information from multiple screens into a single PDF. Each client has unique use cases, which further increases development effort and introduces bugs.
+
+---
+
+## Proposed Solution
+Introduce **mGenerate**, an AI-powered capability integrated with mCase. It will:
+- Automatically extract selected information from various mCase screens/documents
+- Provide a user-friendly interface to select desired data
+- Generate a single consolidated PDF, reducing coding time and manual errors
+
+---
+
+## Value Proposition
+- **Significant Time Savings**: Reduces 100s of hours spent on document generation per project  
+- **Cost Efficiency**: Fewer hours = reduced project costs  
+- **Reusability**: Once implemented, applies across clients and departments  
+- **Enhanced Client Satisfaction**: Faster delivery of high-quality, consistent documents  
+
+---
+
+## Implementation Thoughts
+Build an AI tool within mCase that:
+- Locates relevant person-specific data  
+- Presents a UI for user-driven selection  
+- Outputs to a single formatted PDF

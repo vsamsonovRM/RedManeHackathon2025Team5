@@ -1,0 +1,45 @@
+# env: suppbot-langchain
+
+matplotlib
+nltk
+numpy
+pandas
+plotly
+pyparsing
+regex
+tqdm
+flask
+
+python-dotenv
+openai==1.12.0
+langchain
+langchain-community
+langchain-experimental
+langchain-core
+langchainhub
+
+# -- for wmt api end point, certificate, etc.
+urllib3==2.0.7
+pycryptodome==3.19.1
+
+
+# -- for evaluation metric
+evaluate
+rouge-score
+bert_score
+
+# -- embedding
+# not required if using langchain based ST
+sentence-transformers
+# required for testing splitting / chunking strategies
+# spacy
+
+# load documents
+docx2txt
+pypdf
+
+# vector databases
+chromadb
+
+# reranking
+flashrank
