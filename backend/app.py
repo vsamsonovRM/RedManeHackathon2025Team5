@@ -34,11 +34,15 @@ def health():
     return jsonify({"status": "OK"}), 200
 
 
+SEARCH_KB = None  # Initialize a global variable for the search knowledge base
+
 @app.route('/api/chat', methods=['POST'])
 def chat():
     data = request.get_json()
     user_message = data.get('chat')
-    knowledge_base = data.get('knowledgeBase')  # This is your sampleData.json
+    # Use SEARCH_KB as the knowledge base if available
+    knowledge_base = globals().get('SEARCH_KB') or data.get('knowledgeBase')
+    print(f"Knowledge Base: {knowledge_base}")
 
     # Convert knowledge base to a string or summary for the prompt
     kb_context = summarize_knowledge_base(knowledge_base)  # You need to implement this
@@ -50,6 +54,23 @@ def chat():
     return jsonify({"response": response}), 200
 
 
+@app.route('/api/selected-record', methods=['POST'])
+def selected_record():
+    data = request.get_json()
+    selected_record = data.get('selectedRecord')
+    if not selected_record:
+        return jsonify({'error': 'No record selected'}), 400
+    
+
+    # set context for the LLM here: 
+    # Mocked response for the selected record
+    response = {
+        'recordName': selected_record,
+        'details': f'Details for {selected_record}'
+    }
+    
+    return jsonify({"response": response}), 200
+
 
 @app.route('/api/search', methods=['POST'])
 def search():
@@ -57,11 +78,8 @@ def search():
     user_input = data.get('search_term')  # Get "chat" from POST body
     data_list_id = data.get('data_list_id')
     response = SEARCH_INFRASTRUCTURE.search_record(user_input, data_list_id)
-    # response = [
-    #     {'dynamicFieldMappings': '', 'recordName': 'P1332642429: Jane Doe [2 ACTIVE PSA]', 'datalistPath': '726~', 'recordPath': '215499', 'FIELD_7143': '1332642429', 'FIELD_20642': 'p1332642429', 'FIELD_SEARCHABLE_20642': 'p1332642429', 'FIELD_18471': 'draft', 'FIELD_7146': 'jane', 'FIELD_SEARCHABLE_7146': 'jane', 'FIELD_7145': 'doe', 'FIELD_SEARCHABLE_7145': 'doe', 'FIELD_12459': 'jane  doe', 'FIELD_20581': 'person', 'FIELD_20584': 'person', 'FIELD_28371': '[2 active psa]', 'DYNAMICFIELD_20410': '288546', 'FIELD_37926': 'alcorn', 'FIELD_SEARCHABLE_37926': 'alcorn', 'FIELD_20618': 'female', 'FIELD_SEARCHABLE_20618': 'female', 'FIELD_7148': 'female', 'DYNAMICFIELD_11977': '249128', 'DYNAMICFIELD_SEARCHABLE_11977': '249128', 'DYNAMICFIELD_20274': '245281', 'FIELD_20840': 'yes', 'FIELD_7149': '2020-11-01', 'FIELD_SEARCHABLE_7149': '2020-11-01', 'FIELD_48270': 'known', 'FIELD_SEARCHABLE_48270': 'known', 'FIELD_50387': 'jane doe', 'FIELD_SEARCHABLE_50387': 'jane doe'},
-    #     {'dynamicFieldMappings': '', 'recordName': 'P638684781: Khloe Kane', 'datalistPath': '726~', 'recordPath': '219544', 'FIELD_7143': '638684781', 'FIELD_20642': 'p638684781', 'FIELD_SEARCHABLE_20642': 'p638684781', 'FIELD_18471': 'active', 'FIELD_7146': 'khloe', 'FIELD_SEARCHABLE_7146': 'khloe', 'FIELD_7145': 'kane', 'FIELD_SEARCHABLE_7145': 'kane', 'FIELD_12459': 'khloe  kane', 'FIELD_20840': 'yes', 'FIELD_7149': '1989-01-10', 'FIELD_SEARCHABLE_7149': '1989-01-10', 'FIELD_20618': 'female', 'FIELD_SEARCHABLE_20618': 'female', 'FIELD_7148': 'female', 'DYNAMICFIELD_11977': '249128', 'DYNAMICFIELD_SEARCHABLE_11977': '249128', 'DYNAMICFIELD_20274': '245281', 'FIELD_37734': '2024-01-01', 'FIELD_20581': 'person', 'FIELD_20584': 'person', 'FIELD_37926': 'hinds', 'FIELD_SEARCHABLE_37926': 'hinds', 'FIELD_40134': '260048', 'DYNAMICFIELD_37733': '193076', 'FIELD_40135': '260048', 'FIELD_44855': 'person', 'FIELD_48270': 'known', 'FIELD_SEARCHABLE_48270': 'known'},
-    #     {'dynamicFieldMappings': '', 'recordName': 'P-1154697195: Janel Synan', 'datalistPath': '726~', 'recordPath': '237826', 'FIELD_7143': '1154697195', 'FIELD_20642': 'p1154697195', 'FIELD_SEARCHABLE_20642': 'p1154697195', 'FIELD_18471': 'active', 'FIELD_7146': 'janel', 'FIELD_SEARCHABLE_7146': 'janel', 'FIELD_7147': '2404111251102', 'FIELD_SEARCHABLE_7147': '2404111251102', 'FIELD_7145': 'synan', 'FIELD_SEARCHABLE_7145': 'synan', 'FIELD_12459': 'janel 2404111251102 synan', 'FIELD_20840': 'yes', 'FIELD_7149': '1985-01-01', 'FIELD_SEARCHABLE_7149': '1985-01-01', 'FIELD_36822': 'yes', 'FIELD_37906': '2023-10-31', 'FIELD_20618': 'female', 'FIELD_SEARCHABLE_20618': 'female', 'FIELD_7148': 'female', 'DYNAMICFIELD_11977': '194867', 'DYNAMICFIELD_SEARCHABLE_11977': '194867', 'DYNAMICFIELD_20274': '245281', 'FIELD_28331': '336610470', 'FIELD_SEARCHABLE_28331': '336610470', 'FIELD_37734': '2023-10-31', 'FIELD_40135': '237905', 'FIELD_20584': 'person', 'FIELD_20581': 'person', 'FIELD_40134': '237905', 'FIELD_37926': 'hinds', 'FIELD_SEARCHABLE_37926': 'hinds', 'FIELD_40307': 'janel.synan@fakeemail.com', 'DYNAMICFIELD_37733': '193076', 'FIELD_48270': 'known', 'FIELD_SEARCHABLE_48270': 'known'}
-    # ]
+    
+    
     return jsonify({"response": response}), 200
 
 class CustomPDF(FPDF):
@@ -205,31 +223,19 @@ def datalist():
         {'dynamicFieldMappings': '', 'recordName': 's_P-1154697195: Janel Synan', 'datalistPath': '726~', 'recordPath': '237826', 'FIELD_7143': '1154697195', 'FIELD_20642': 'p1154697195', 'FIELD_SEARCHABLE_20642': 'p1154697195', 'FIELD_18471': 'active', 'FIELD_7146': 'janel', 'FIELD_SEARCHABLE_7146': 'janel', 'FIELD_7147': '2404111251102', 'FIELD_SEARCHABLE_7147': '2404111251102', 'FIELD_7145': 'synan', 'FIELD_SEARCHABLE_7145': 'synan', 'FIELD_12459': 'janel 2404111251102 synan', 'FIELD_20840': 'yes', 'FIELD_7149': '1985-01-01', 'FIELD_SEARCHABLE_7149': '1985-01-01', 'FIELD_36822': 'yes', 'FIELD_37906': '2023-10-31', 'FIELD_20618': 'female', 'FIELD_SEARCHABLE_20618': 'female', 'FIELD_7148': 'female', 'DYNAMICFIELD_11977': '194867', 'DYNAMICFIELD_SEARCHABLE_11977': '194867', 'DYNAMICFIELD_20274': '245281', 'FIELD_28331': '336610470', 'FIELD_SEARCHABLE_28331': '336610470', 'FIELD_37734': '2023-10-31', 'FIELD_40135': '237905', 'FIELD_20584': 'person', 'FIELD_20581': 'person', 'FIELD_40134': '237905', 'FIELD_37926': 'hinds', 'FIELD_SEARCHABLE_37926': 'hinds', 'FIELD_40307': 'janel.synan@fakeemail.com', 'DYNAMICFIELD_37733': '193076', 'FIELD_48270': 'known', 'FIELD_SEARCHABLE_48270': 'known'}
     ]
     return jsonify({
-        'response': f'You selected datalist: {selected}. Here is some dummy info for {selected}.',
+        'response': f'You selected datalist: {selected}. Here are some records for the selected datalist.',
         'top10': top_10
     }), 200
 
 def summarize_knowledge_base(knowledge_base):
     """
     Summarize the knowledge base JSON into a readable string for the LLM prompt.
-    This example summarizes roles and permissions for each entry.
+    This version returns a pretty-printed JSON string for maximum fidelity.
     """
+    import json
     if not knowledge_base:
         return "No knowledge base provided."
-    summary_lines = []
-    for entry in knowledge_base:
-        name = entry.get("Name", [{}])[0].get("Value", "Unknown")
-        summary_lines.append(f"Entity: {name}")
-        roles = entry.get("ListRoles", [])
-        for role in roles:
-            role_name = role.get("RoleName", "Unknown Role")
-            perms = []
-            for perm in ["CanEdit", "CanAdd", "CanDelete", "CanBulkEdit", "CanMove", "CanMerge", "IsListAdmin"]:
-                if role.get(perm):
-                    perms.append(perm)
-            perms_str = ", ".join(perms) if perms else "No special permissions"
-            summary_lines.append(f"  - {role_name}: {perms_str}")
-    return "\n".join(summary_lines)
+    return json.dumps(knowledge_base, indent=2)
 
 
 

@@ -3,7 +3,7 @@ import "./chatInterface.css";
 import { checkBackendHealth } from "../../services/health";
 import { sendChatMessage } from "../../services/chat";
 import GeneratePDF from "../GeneratePDF";
-import sampleData from "../../data/sampleData.json"; 
+import { selectTopDatalist } from "../../services/selectTopDatalist"; 
 import axios from "axios";
 import InitialDatalistRadioGroup from "./InitialDatalistRadioGroup";
 import Top10DatalistRadioGroup from "./Top10DatalistRadioGroup";
@@ -28,6 +28,8 @@ const ChatInterface = () => {
   const [topDatalists, setTopDatalists] = useState([]);
   const [selectedTopDatalist, setSelectedTopDatalist] = useState("");
   const [topDatalistDisabled, setTopDatalistDisabled] = useState(false);
+
+  const [enablePrompt, setEnablePrompt] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -67,8 +69,9 @@ const ChatInterface = () => {
     }
   };
 
-  const handleTopDatalistChange = (e) => {
+  const handleTopDatalistChange = async (e) => {
     const value = e.target.value;
+    setEnablePrompt(true);
     if (!topDatalistDisabled) {
       setSelectedTopDatalist(value);
       setTopDatalistDisabled(true);
@@ -76,6 +79,19 @@ const ChatInterface = () => {
         ...prev,
         { sender: "bot", text: `You selected top datalist: ${value}` }
       ]);
+      // Call backend service for selected top datalist
+      try {
+        const res = await selectTopDatalist(value);
+        setMessages(prev => [
+          ...prev,
+          { sender: "bot", text: res?.response || "Record selection acknowledged." }
+        ]);
+      } catch (err) {
+        setMessages(prev => [
+          ...prev,
+          { sender: "bot", text: "Error sending selected record to backend." }
+        ]);
+      }
     }
   };
 
@@ -85,7 +101,7 @@ const ChatInterface = () => {
     const userMsg = { sender: "user", text: input };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
-    const botReply = await sendChatMessage(input, sampleData);
+    const botReply = await sendChatMessage(input);
     setMessages((prev) => [
       ...prev,
       { sender: "bot", text: (
@@ -117,9 +133,9 @@ const ChatInterface = () => {
               />
             )}
             {/* Show top 10 datalists radio group after first selection */}
-            {idx === messages.length - 1 && topDatalists.length > 0 && (
+            {idx === messages.length - 1 && topDatalists.length > 0 && msg.sender === "bot" && !topDatalistDisabled && (
               <div style={{ marginTop: 16 }}>
-                <div style={{ fontWeight: 'bold', marginBottom: 4 }}>Top 10 Datalists:</div>
+                <div style={{ fontWeight: 'bold', marginBottom: 4 }}>Search for records:</div>
                 <Top10DatalistRadioGroup
                   options={topDatalists}
                   selectedOption={selectedTopDatalist}
@@ -135,6 +151,7 @@ const ChatInterface = () => {
       <div className="chat-status-bar">
         Backend status: <span className={`status-badge ${status === 'OK' ? 'ok' : status === 'ERROR' ? 'error' : 'checking'}`}>{status || 'Checking...'}</span>
       </div>
+      {enablePrompt && (
       <form className="chat-input-form" onSubmit={handleSend}>
         <input
           type="text"
@@ -145,6 +162,7 @@ const ChatInterface = () => {
         />
         <button type="submit" className="chat-send-btn">Send</button>
       </form>
+        )}
     </div>
   );
 };
