@@ -56,11 +56,9 @@ const ChatInterface = () => {
           { sender: "bot", text: res.data.response }
         ]);
         // If backend returns array of objects, keep the entire object
-        if (Array.isArray(res.data.top10) && res.data.top10.length > 0 && typeof res.data.top10[0] === 'object') {
+       
           setTopDatalists(res.data.top10);
-        } else if (Array.isArray(res.data.top10)) {
-          setTopDatalists(res.data.top10);
-        }
+       
       } catch (err) {
         setMessages(prev => [
           ...prev,
@@ -72,6 +70,7 @@ const ChatInterface = () => {
 
   const handleTopDatalistChange = async (e) => {
     const value = e.target.value;
+    
     setEnablePrompt(true);
     if (!topDatalistDisabled) {
       setSelectedTopDatalist(value);
@@ -81,10 +80,11 @@ const ChatInterface = () => {
         { sender: "bot", text: `You selected top datalist: ${value}` }
       ]);
       // Find the full object for the selected value
-      const selectedObj = topDatalists.find(obj => obj.recordName === value);
+      const selectedObj = topDatalists[e.target.id]
+      console.log('topDatalists',selectedObj)
       // Call backend service for selected top datalist
       try {
-        const res = await selectTopDatalist(selectedObj || value);
+        const res = await selectTopDatalist(selectedObj);
         console.log('RES',res);
         setMessages(prev => [
           ...prev,

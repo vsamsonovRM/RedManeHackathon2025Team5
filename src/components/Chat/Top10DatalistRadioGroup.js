@@ -58,11 +58,13 @@ function Top10DatalistRadioGroup({ options, selectedOption, updateState, onSelec
       />
       <div role="radiogroup" aria-label="Top 10 Datalist options" className="chat-radio-group">
 
-        {searchResults.map((opt) => (
+        {searchResults.map((opt,index) => (
+          
           <label key={opt} style={{ display: "block", margin: "0.3em 0" }}>
             <input
               type="radio"
               name="top10datalist"
+              id={index}
               value={opt}
               checked={selectedOption === opt}
               disabled={updateState}
