@@ -89,7 +89,7 @@ def search():
 @app.route('/api/generate_pdf_content', methods=['POST'])
 def generate_pdf_content():
     data = request.get_json()
-    mapped_json = data.get('mapped_content')  # Get "chat" from POST body
+    mapped_json = data  # Get "chat" from POST body
     response = LLM_INFRASTRUCTURE.generate_pdf_structure(mapped_json)
     return jsonify({"response": response}), 200
 
@@ -301,6 +301,9 @@ def map_elastic_search_data_by_field_id(input_object):
         else:
             # If key doesn't match pattern, keep it as is
             mapped_object[key] = value
+
+    SEARCH_KB = summarize_knowledge_base(mapped_object)
+    globals()['SEARCH_KB'] = SEARCH_KB
 
     return mapped_object 
 
