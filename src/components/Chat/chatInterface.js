@@ -7,6 +7,7 @@ import { selectTopDatalist } from "../../services/selectTopDatalist";
 import axios from "axios";
 import InitialDatalistRadioGroup from "./InitialDatalistRadioGroup";
 import Top10DatalistRadioGroup from "./Top10DatalistRadioGroup";
+import { downloadDynamicPdf } from "../GeneratePDF";
 
 const initialOptions = [{
     label: "Persons",
@@ -84,10 +85,13 @@ const ChatInterface = () => {
       // Call backend service for selected top datalist
       try {
         const res = await selectTopDatalist(selectedObj || value);
+        console.log('RES',res);
         setMessages(prev => [
           ...prev,
-          { sender: "bot", text: res?.response || "Record selection acknowledged." }
+          { sender: "bot", text: "Record selection acknowledged." }
         ]);
+        downloadDynamicPdf(res.data.response.mapped_selected);
+
       } catch (err) {
         setMessages(prev => [
           ...prev,
