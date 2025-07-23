@@ -186,7 +186,7 @@ const ChatInterface = () => {
                 <div style={{ fontWeight: 'bold', marginBottom: 4 }}>Search for records:</div>
                 <input
                     type="text"
-                    placeholder="Select a top 10 datalist option"
+                    placeholder="Record search..."
                     value={searchTerm}
                     onChange={handleInputChange}
                     style={{

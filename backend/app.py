@@ -257,7 +257,7 @@ def datalist():
     #we may call map_elastic_search_date_by_field_id(top_10[0]) here
 
     return jsonify({
-        'response': f'You selected datalist: {selected}. Here are some records for the selected datalist.',
+        'response': f'Your selected datalist: {selected}.',
         'top10': top_10
     }), 200
 
