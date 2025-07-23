@@ -43,7 +43,6 @@ def chat():
     user_message = data.get('chat')
     # Use SEARCH_KB as the knowledge base if available
     knowledge_base = globals().get('SEARCH_KB') or data.get('knowledgeBase')
-    print(f"Knowledge Base: {knowledge_base}")
 
     # Convert knowledge base to a string or summary for the prompt
     kb_context = summarize_knowledge_base(knowledge_base)  # You need to implement this
@@ -62,14 +61,15 @@ def selected_record():
     if not selected_record:
         return jsonify({'error': 'No record selected'}), 400
     
+    mapped_selected = summarize_selected(selected_record)
 
 
-    print(f"Selected Record: {selected_record}")
     # set context for the LLM here: 
     # Mocked response for the selected record
     response = {
         'recordName': selected_record,
-        'details': f'Details for {selected_record}'
+        'details': f'Details for {selected_record}',
+        'mapped_selected': mapped_selected  
     }
     
     return jsonify({"response": response}), 200
@@ -89,7 +89,7 @@ def search():
 @app.route('/api/generate_pdf_content', methods=['POST'])
 def generate_pdf_content():
     data = request.get_json()
-    mapped_json = data.get('mapped_json')  # Get "chat" from POST body
+    mapped_json = data.get('mapped_content')  # Get "chat" from POST body
     response = LLM_INFRASTRUCTURE.generate_pdf_structure(mapped_json)
     return jsonify({"response": response}), 200
 
@@ -129,29 +129,42 @@ class CustomPDF(FPDF):
         self.set_font(cfg.FONT_FAMILY, size=cfg.FONT_SIZE_LABEL)
         self.set_line_width(cfg.HEADER_LINE_WIDTH)
 
-        box_width = (self.w - 2 * cfg.DEFAULT_MARGIN) / len(fields)
+        max_fields_per_row = cfg.HEADER_COLUMNS
         box_height = 20
-        y_start = self.get_y()
-        x_start = cfg.DEFAULT_MARGIN
+        y_current = self.get_y()
+        
+        # Process fields in chunks of max 5
+        for row_start_idx in range(0, len(fields), max_fields_per_row):
+            # Get fields for this row (max 5)
+            row_fields = fields[row_start_idx:row_start_idx + max_fields_per_row]
+            fields_in_row = len(row_fields)
+            
+            # Calculate box width based on actual fields in this row
+            box_width = (self.w - 2 * cfg.DEFAULT_MARGIN) / fields_in_row
+            x_start = cfg.DEFAULT_MARGIN
 
-        for field in fields:
-            label = field.get("label", "")
-            value = field.get("value", "")
+            for field in row_fields:
+                label = field.get("label", "")
+                value = field.get("value", "")
 
-            self.set_xy(x_start, y_start)
-            self.rect(x_start, y_start, box_width, box_height)
-            self.set_xy(x_start + 2, y_start + 2)
+                self.set_xy(x_start, y_current)
+                self.rect(x_start, y_current, box_width, box_height)
+                self.set_xy(x_start + 2, y_current + 2)
 
-            self.set_font(cfg.FONT_FAMILY, 'B', cfg.FONT_SIZE_LABEL)
-            self.cell(box_width - 4, 5, label)
+                self.set_font(cfg.FONT_FAMILY, 'B', cfg.FONT_SIZE_LABEL)
+                self.cell(box_width - 4, 5, label)
 
-            self.set_xy(x_start + 2, y_start + 10)
-            self.set_font(cfg.FONT_FAMILY, '', cfg.FONT_SIZE_FIELD)
-            self.cell(box_width - 4, 5, value)
+                self.set_xy(x_start + 2, y_current + 10)
+                self.set_font(cfg.FONT_FAMILY, '', cfg.FONT_SIZE_FIELD)
+                self.cell(box_width - 4, 5, value)
 
-            x_start += box_width
+                x_start += box_width
+            
+            # Move to next row
+            y_current += box_height
 
-        self.set_y(y_start + box_height + cfg.LINE_SPACING)
+        # Set final Y position with line spacing
+        self.set_y(y_current + cfg.LINE_SPACING)
 
     def add_boxed_content(self, header, body):
         padding = 3
@@ -186,11 +199,12 @@ class CustomPDF(FPDF):
 
 
 
-@app.route('/generate-pdf', methods=['POST'])
+@app.route('/api/generate-pdf', methods=['POST'])
 def generate_pdf():
     try:
         data = request.get_json()
-
+        print('request', request)
+        print('data', data)
         header_fields = data.get("headerFields", [])
         content_sections = data.get("content", [])
         default_header = data.get("defaultHeader", {})
@@ -241,7 +255,7 @@ def datalist():
         'top10': top_10
     }), 200
 
-def map_elastic_search_date_by_field_id(input_object):
+def map_elastic_search_data_by_field_id(input_object):
     """
     Takes an object with FIELD_[number] keys and replaces them with the corresponding 
     labels from the field configuration, ignoring keys with "FIELD_SEARCHABLE" or "DYNAMICFIELD".
@@ -288,7 +302,12 @@ def map_elastic_search_date_by_field_id(input_object):
             # If key doesn't match pattern, keep it as is
             mapped_object[key] = value
 
-    return mapped_object  
+    return mapped_object 
+
+def summarize_selected(selected):
+    mapped_selected = map_elastic_search_data_by_field_id(selected)
+    #todo this will call victor's LLM prompt passing in selected
+    return mapped_selected 
 
 def summarize_knowledge_base(knowledge_base):
     """

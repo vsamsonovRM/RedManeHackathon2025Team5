@@ -2,35 +2,54 @@ import React from 'react';
 import axios from 'axios';
 
 const sampleContent = {
-  "headerFields": [
-    { "label": "Last Name", "value": "Doe" },
-    { "label": "First Name", "value": "John" },
-    { "label": "Date of Birth", "value": "01/01/1990" },
-    { "label": "Gender Identity", "value": "Male" }
-  ],
-  "content": [
-    { "header": "Title", "body": "Lorem ipsum dolor sit amet." },
-    { "header": "Title 2", "body": "Lorem ipsum again." }
-    // etc...
-  ],
-  "defaultHeader": {
-    "image": "https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png",
-    "title": "Screening Form",
-    "description": "Optional subtitle or description"
-  }
+
+    // "headerFields": [
+    //   { "label": "First Name", "value": "jane" },
+    //   { "label": "Last Name", "value": "doe" },
+    //   { "label": "Legal Name", "value": "jane  doe" },
+    //   { "label": "Sex at Birth", "value": "female" },
+    //   { "label": "Gender Identity", "value": "female" },
+    //   { "label": "Date of Birth", "value": "2020-11-01" },
+    //   { "label": "Date of Birth Available?", "value": "yes" },
+    //   { "label": "Alias / Other Names", "value": "jane doe" }
+    // ],
+    // "content": [
+    //   { "header": "Active PSA Alerts Count", "body": "[2 active psa]" },
+    //   { "header": "Person ID", "body": "p1332642429" },
+    //   { "header": "Person Status", "body": "draft" },
+    //   { "header": "Background Check Requester", "body": "person" },
+    //   { "header": "Datalist Type", "body": "person" },
+    //   { "header": "County", "body": "alcorn" },
+    //   { "header": "Known / Unknown Person", "body": "known" },
+    //   { "header": "recordName", "body": "P1332642429: Jane Doe [2 ACTIVE PSA]" }
+    // ],
+    // "defaultHeader": {
+    //   "image": "https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png",
+    //   "title": "SCREENING FORM",
+    //   "description": "Bimaadiziwin Wiidookaagewin Cultural Program"
+    // }
 };
 
-async function downloadDynamicPdf(content) {
+export async function downloadDynamicPdf(content) {
   console.log("downloadDynamicPdf", content);
   try {
-    const response = await axios.post('/generate-pdf', content, {
+    console.log('content', content);
+    const response = await axios.post('/api/generate_pdf_content', content);
+
+
+    console.log('response', response);
+
+    const response2 = await axios.post('/api/generate-pdf', response.data.response , {
       responseType: 'blob',
       headers: {
         'Content-Type': 'application/json',
       },
     });
 
-    const blob = new Blob([response.data], { type: 'application/pdf' });
+    console.log('response2', response2);
+
+
+    const blob = new Blob([response2.data], { type: 'application/pdf' });
     const url = window.URL.createObjectURL(blob);
 
     const link = document.createElement('a');
