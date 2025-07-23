@@ -23,7 +23,7 @@ function Top10DatalistRadioGroup({ options, selectedOption, updateState, onSelec
           search_term: searchTerm,
           data_list_id: 726,
         });
-        setSearchResults(response.data.response.map(item => item.recordName));
+        setSearchResults(response.data.response);
       } catch (error) {
         console.error("Search API error:", error);
         // optionally reset or handle error state
@@ -33,29 +33,8 @@ function Top10DatalistRadioGroup({ options, selectedOption, updateState, onSelec
     fetchSearchResults();
   }, [searchTerm, options]);
 
-  const handleInputChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
 
   return (
-    <>
-      <input
-        type="text"
-        placeholder="Select a top 10 datalist option"
-        value={searchTerm}
-        onChange={handleInputChange}
-        style={{
-          width: '100%',
-          padding: '8px',
-          marginBottom: '10px',
-          border: '1px solid #ccc',
-          borderRadius: '6px',
-          fontSize: '1em',
-          boxSizing: 'border-box',
-          outline: 'none',
-          transition: 'border-color 0.2s',
-        }}
-      />
       <div role="radiogroup" aria-label="Top 10 Datalist options" className="chat-radio-group">
 
         {searchResults.map((opt,index) => (
@@ -75,7 +54,6 @@ function Top10DatalistRadioGroup({ options, selectedOption, updateState, onSelec
           </label>
         ))}
       </div>
-    </>
   );
 }
 

@@ -28,11 +28,11 @@ function App() {
     <div className="App">
       <Header />
       {/* Show the dummy initial chat message */}
-      {currMessage && (
+      {/* {currMessage && (
         <div style={{textAlign: 'center', margin: '1em', color: '#1976d2', fontWeight: 500}}>
           Initial bot reply: {currMessage}
         </div>
-      )}
+      )} */}
       <ChatInterface />
     </div>
   );

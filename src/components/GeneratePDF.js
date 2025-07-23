@@ -30,16 +30,30 @@ const sampleContent = {
     // }
 };
 
-export async function downloadDynamicPdf(content) {
-  console.log("downloadDynamicPdf", content);
-  try {
+export async function prepareDynamicPdfContent(content) {
+    try {
     console.log('content', content);
     const response = await axios.post('/api/generate_pdf_content', content);
 
 
     console.log('response', response);
+    return response.data.response;
+  } catch (error) { 
+    console.error('Failed to prepare PDF content:', error);
+    return null;
+  }
+}
 
-    const response2 = await axios.post('/api/generate-pdf', response.data.response , {
+export async function downloadDynamicPdf(content) {
+  console.log("downloadDynamicPdf", content);
+  try {
+    // console.log('content', content);
+    // const response = await axios.post('/api/generate_pdf_content', content);
+
+
+    // console.log('response', response);
+
+    const response2 = await axios.post('/api/generate-pdf', content , {
       responseType: 'blob',
       headers: {
         'Content-Type': 'application/json',
