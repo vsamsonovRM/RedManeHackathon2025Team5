@@ -32,7 +32,6 @@ class SearchInfrastructure:
         response = self.connection.search(index=index, body=query)
         # Extract and return only the hits' source docs:
         hits = response.get("hits", {}).get("hits", [])
-        print("outptu")
         return [hit["_source"] for hit in hits]
         
 curr_inf = SearchInfrastructure()

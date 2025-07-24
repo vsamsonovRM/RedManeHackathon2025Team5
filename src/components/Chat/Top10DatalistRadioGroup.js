@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 function Top10DatalistRadioGroup({ options, selectedOption, updateState, onSelect }) {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm] = useState("");
   const [searchResults, setSearchResults] = useState(options);
 
 

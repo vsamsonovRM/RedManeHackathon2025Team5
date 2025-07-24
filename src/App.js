@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 
 function App() {
-  const [currMessage, setCurrMessage] = useState("");
+  const [setCurrMessage] = useState("");
 
   // Dummy initial chat function
   const sendChat = async () => {
