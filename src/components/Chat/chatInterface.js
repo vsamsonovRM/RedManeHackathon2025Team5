@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import "./chatInterface.css";
 import { checkBackendHealth } from "../../services/health";
 import { sendChatMessage } from "../../services/chat";
-import GeneratePDF, { downloadDynamicPdf,prepareDynamicPdfContent } from "../GeneratePDF";
+import GeneratePDF, { prepareDynamicPdfContent } from "../GeneratePDF";
 import { selectTopDatalist } from "../../services/selectTopDatalist"; 
 import axios from "axios";
 import InitialDatalistRadioGroup from "./InitialDatalistRadioGroup";
@@ -13,6 +13,12 @@ const initialOptions = [{
     id:"726"
 }];
 
+/**
+ * Main chat interface component that handles datalist selection, record search, 
+ * chat messaging, and PDF generation functionality.
+ * 
+ * @returns {JSX.Element} The rendered chat interface component
+ */
 const ChatInterface = () => {
   const [selectedOption, setSelectedOption] = useState("");
   const [updateState, setUpdateState] = useState(false);
@@ -74,6 +80,12 @@ const ChatInterface = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  /**
+   * Handles radio button change events for initial datalist selection.
+   * Makes API call to fetch datalist information and updates the chat messages.
+   * 
+   * @param {Event} e - The change event from the radio button
+   */
   const handleRadioChange = async (e) => {
     const value = e.target.value;
     if (!updateState) {
@@ -98,6 +110,12 @@ const ChatInterface = () => {
     }
   };
 
+  /**
+   * Handles selection of a top datalist record from search results.
+   * Sends selected record to backend, prepares PDF content, and enables chat prompts.
+   * 
+   * @param {Event} e - The change event from the radio button selection
+   */
   const handleTopDatalistChange = async (e) => {
     const value = e.target.value;
     
@@ -111,11 +129,9 @@ const ChatInterface = () => {
       ]);
       // Find the full object for the selected value
       const selectedObj = topDatalists[e.target.id]
-      console.log('topDatalists',selectedObj)
       // Call backend service for selected top datalist
       try {
         const res = await selectTopDatalist(selectedObj);
-        console.log('RES',res);
         setMessages(prev => [
           ...prev,
           { sender: "bot", text: "Record selection acknowledged." }
@@ -139,6 +155,12 @@ const ChatInterface = () => {
     }
   };
 
+  /**
+   * Handles sending chat messages to the backend and displaying responses.
+   * Prevents sending empty messages and updates the chat interface with user and bot messages.
+   * 
+   * @param {Event} e - The form submit event
+   */
   const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -156,6 +178,12 @@ const ChatInterface = () => {
     ]);
   };
 
+  /**
+   * Handles input changes for the record search field.
+   * Updates the search term state which triggers record search via useEffect.
+   * 
+   * @param {Event} e - The input change event
+   */
   const handleInputChange = (e) => {
     setSearchTerm(e.target.value);
   };

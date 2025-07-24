@@ -14,13 +14,17 @@ LLM_INFRASTRUCTURE = LLMInfrastructure()
 SEARCH_INFRASTRUCTURE = SearchInfrastructure()
 
 CORS(app)
-# Home route
+
+# **Home Route Handler**
+# Returns a welcome message for the root endpoint of the Flask application
 @app.route('/')
 def home():
     return "Welcome to the Flask app!"
 
 
-# Example API route
+# **Echo API Endpoint**
+# Accepts POST requests and returns the JSON data that was sent to it
+# Used for testing API connectivity and data transmission
 @app.route('/api/echo', methods=['POST'])
 def echo():
     data = request.get_json()
@@ -29,7 +33,9 @@ def echo():
     })
 
 
-# Health check route
+# **Health Check Endpoint**
+# Returns application status for monitoring and load balancer health checks
+# Returns HTTP 200 with status OK when the application is running properly
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({"status": "OK"}), 200
@@ -37,6 +43,11 @@ def health():
 
 SEARCH_KB = None  # Initialize a global variable for the search knowledge base
 
+# **Chat API Endpoint**
+# Processes chat messages and generates AI responses using the LLM infrastructure
+# Combines user messages with knowledge base context to provide informed responses
+# Parameters: chat (user message), knowledgeBase (optional context data)
+# Returns: JSON response with AI-generated message
 @app.route('/api/chat', methods=['POST'])
 def chat():
     data = request.get_json()
@@ -54,6 +65,11 @@ def chat():
     return jsonify({"response": response}), 200
 
 
+# **Selected Record Processing Endpoint**
+# Handles processing of a selected record from search results
+# Maps the selected record data and prepares it for display or further processing
+# Parameters: selectedRecord (the record data selected by the user)
+# Returns: JSON response with record details and mapped data
 @app.route('/api/selected-record', methods=['POST'])
 def selected_record():
     data = request.get_json()
@@ -75,23 +91,33 @@ def selected_record():
     return jsonify({"response": response}), 200
 
 
+# **Search API Endpoint**
+# Performs search operations using the search infrastructure
+# Searches for records based on user input and datalist ID
+# Parameters: search_term (user query), data_list_id (specific datalist to search)
+# Returns: JSON response with search results
 @app.route('/api/search', methods=['POST'])
 def search():
     data = request.get_json()
     user_input = data.get('search_term')  # Get "chat" from POST body
     data_list_id = data.get('data_list_id')
-    response = SEARCH_INFRASTRUCTURE.search_record(user_input, data_list_id)
+    #esponse = SEARCH_INFRASTRUCTURE.search_record(user_input, data_list_id)
     
-    # top_10 = [
-    #     {'dynamicFieldMappings': '', 'recordName': 'a_P1332642429: Jane Doe [2 ACTIVE PSA]', 'datalistPath': '726~', 'recordPath': '215499', 'FIELD_7143': '1332642429', 'FIELD_20642': 'p1332642429', 'FIELD_SEARCHABLE_20642': 'p1332642429', 'FIELD_18471': 'draft', 'FIELD_7146': 'jane', 'FIELD_SEARCHABLE_7146': 'jane', 'FIELD_7145': 'doe', 'FIELD_SEARCHABLE_7145': 'doe', 'FIELD_12459': 'jane  doe', 'FIELD_20581': 'person', 'FIELD_20584': 'person', 'FIELD_28371': '[2 active psa]', 'DYNAMICFIELD_20410': '288546', 'FIELD_37926': 'alcorn', 'FIELD_SEARCHABLE_37926': 'alcorn', 'FIELD_20618': 'female', 'FIELD_SEARCHABLE_20618': 'female', 'FIELD_7148': 'female', 'DYNAMICFIELD_11977': '249128', 'DYNAMICFIELD_SEARCHABLE_11977': '249128', 'DYNAMICFIELD_20274': '245281', 'FIELD_20840': 'yes', 'FIELD_7149': '2020-11-01', 'FIELD_SEARCHABLE_7149': '2020-11-01', 'FIELD_48270': 'known', 'FIELD_SEARCHABLE_48270': 'known', 'FIELD_50387': 'jane doe', 'FIELD_SEARCHABLE_50387': 'jane doe'},
-    #     {'dynamicFieldMappings': '', 'recordName': 'a_P638684781: Khloe Kane', 'datalistPath': '726~', 'recordPath': '219544', 'FIELD_7143': '638684781', 'FIELD_20642': 'p638684781', 'FIELD_SEARCHABLE_20642': 'p638684781', 'FIELD_18471': 'active', 'FIELD_7146': 'khloe', 'FIELD_SEARCHABLE_7146': 'khloe', 'FIELD_7145': 'kane', 'FIELD_SEARCHABLE_7145': 'kane', 'FIELD_12459': 'khloe  kane', 'FIELD_20840': 'yes', 'FIELD_7149': '1989-01-10', 'FIELD_SEARCHABLE_7149': '1989-01-10', 'FIELD_20618': 'female', 'FIELD_SEARCHABLE_20618': 'female', 'FIELD_7148': 'female', 'DYNAMICFIELD_11977': '249128', 'DYNAMICFIELD_SEARCHABLE_11977': '249128', 'DYNAMICFIELD_20274': '245281', 'FIELD_37734': '2024-01-01', 'FIELD_20581': 'person', 'FIELD_20584': 'person', 'FIELD_37926': 'hinds', 'FIELD_SEARCHABLE_37926': 'hinds', 'FIELD_40134': '260048', 'DYNAMICFIELD_37733': '193076', 'FIELD_40135': '260048', 'FIELD_44855': 'person', 'FIELD_48270': 'known', 'FIELD_SEARCHABLE_48270': 'known'},
-    #     {'dynamicFieldMappings': '', 'recordName': 'a_P-1154697195: Janel Synan', 'datalistPath': '726~', 'recordPath': '237826', 'FIELD_7143': '1154697195', 'FIELD_20642': 'p1154697195', 'FIELD_SEARCHABLE_20642': 'p1154697195', 'FIELD_18471': 'active', 'FIELD_7146': 'janel', 'FIELD_SEARCHABLE_7146': 'janel', 'FIELD_7147': '2404111251102', 'FIELD_SEARCHABLE_7147': '2404111251102', 'FIELD_7145': 'synan', 'FIELD_SEARCHABLE_7145': 'synan', 'FIELD_12459': 'janel 2404111251102 synan', 'FIELD_20840': 'yes', 'FIELD_7149': '1985-01-01', 'FIELD_SEARCHABLE_7149': '1985-01-01', 'FIELD_36822': 'yes', 'FIELD_37906': '2023-10-31', 'FIELD_20618': 'female', 'FIELD_SEARCHABLE_20618': 'female', 'FIELD_7148': 'female', 'DYNAMICFIELD_11977': '194867', 'DYNAMICFIELD_SEARCHABLE_11977': '194867', 'DYNAMICFIELD_20274': '245281', 'FIELD_28331': '336610470', 'FIELD_SEARCHABLE_28331': '336610470', 'FIELD_37734': '2023-10-31', 'FIELD_40135': '237905', 'FIELD_20584': 'person', 'FIELD_20581': 'person', 'FIELD_40134': '237905', 'FIELD_37926': 'hinds', 'FIELD_SEARCHABLE_37926': 'hinds', 'FIELD_40307': 'janel.synan@fakeemail.com', 'DYNAMICFIELD_37733': '193076', 'FIELD_48270': 'known', 'FIELD_SEARCHABLE_48270': 'known'}
-    # ]
+    top_10 = [
+         {'dynamicFieldMappings': '', 'recordName': 'a_P1332642429: Jane Doe [2 ACTIVE PSA]', 'datalistPath': '726~', 'recordPath': '215499', 'FIELD_7143': '1332642429', 'FIELD_20642': 'p1332642429', 'FIELD_SEARCHABLE_20642': 'p1332642429', 'FIELD_18471': 'draft', 'FIELD_7146': 'jane', 'FIELD_SEARCHABLE_7146': 'jane', 'FIELD_7145': 'doe', 'FIELD_SEARCHABLE_7145': 'doe', 'FIELD_12459': 'jane  doe', 'FIELD_20581': 'person', 'FIELD_20584': 'person', 'FIELD_28371': '[2 active psa]', 'DYNAMICFIELD_20410': '288546', 'FIELD_37926': 'alcorn', 'FIELD_SEARCHABLE_37926': 'alcorn', 'FIELD_20618': 'female', 'FIELD_SEARCHABLE_20618': 'female', 'FIELD_7148': 'female', 'DYNAMICFIELD_11977': '249128', 'DYNAMICFIELD_SEARCHABLE_11977': '249128', 'DYNAMICFIELD_20274': '245281', 'FIELD_20840': 'yes', 'FIELD_7149': '2020-11-01', 'FIELD_SEARCHABLE_7149': '2020-11-01', 'FIELD_48270': 'known', 'FIELD_SEARCHABLE_48270': 'known', 'FIELD_50387': 'jane doe', 'FIELD_SEARCHABLE_50387': 'jane doe'},
+         {'dynamicFieldMappings': '', 'recordName': 'a_P638684781: Khloe Kane', 'datalistPath': '726~', 'recordPath': '219544', 'FIELD_7143': '638684781', 'FIELD_20642': 'p638684781', 'FIELD_SEARCHABLE_20642': 'p638684781', 'FIELD_18471': 'active', 'FIELD_7146': 'khloe', 'FIELD_SEARCHABLE_7146': 'khloe', 'FIELD_7145': 'kane', 'FIELD_SEARCHABLE_7145': 'kane', 'FIELD_12459': 'khloe  kane', 'FIELD_20840': 'yes', 'FIELD_7149': '1989-01-10', 'FIELD_SEARCHABLE_7149': '1989-01-10', 'FIELD_20618': 'female', 'FIELD_SEARCHABLE_20618': 'female', 'FIELD_7148': 'female', 'DYNAMICFIELD_11977': '249128', 'DYNAMICFIELD_SEARCHABLE_11977': '249128', 'DYNAMICFIELD_20274': '245281', 'FIELD_37734': '2024-01-01', 'FIELD_20581': 'person', 'FIELD_20584': 'person', 'FIELD_37926': 'hinds', 'FIELD_SEARCHABLE_37926': 'hinds', 'FIELD_40134': '260048', 'DYNAMICFIELD_37733': '193076', 'FIELD_40135': '260048', 'FIELD_44855': 'person', 'FIELD_48270': 'known', 'FIELD_SEARCHABLE_48270': 'known'},
+         {'dynamicFieldMappings': '', 'recordName': 'a_P-1154697195: Janel Synan', 'datalistPath': '726~', 'recordPath': '237826', 'FIELD_7143': '1154697195', 'FIELD_20642': 'p1154697195', 'FIELD_SEARCHABLE_20642': 'p1154697195', 'FIELD_18471': 'active', 'FIELD_7146': 'janel', 'FIELD_SEARCHABLE_7146': 'janel', 'FIELD_7147': '2404111251102', 'FIELD_SEARCHABLE_7147': '2404111251102', 'FIELD_7145': 'synan', 'FIELD_SEARCHABLE_7145': 'synan', 'FIELD_12459': 'janel 2404111251102 synan', 'FIELD_20840': 'yes', 'FIELD_7149': '1985-01-01', 'FIELD_SEARCHABLE_7149': '1985-01-01', 'FIELD_36822': 'yes', 'FIELD_37906': '2023-10-31', 'FIELD_20618': 'female', 'FIELD_SEARCHABLE_20618': 'female', 'FIELD_7148': 'female', 'DYNAMICFIELD_11977': '194867', 'DYNAMICFIELD_SEARCHABLE_11977': '194867', 'DYNAMICFIELD_20274': '245281', 'FIELD_28331': '336610470', 'FIELD_SEARCHABLE_28331': '336610470', 'FIELD_37734': '2023-10-31', 'FIELD_40135': '237905', 'FIELD_20584': 'person', 'FIELD_20581': 'person', 'FIELD_40134': '237905', 'FIELD_37926': 'hinds', 'FIELD_SEARCHABLE_37926': 'hinds', 'FIELD_40307': 'janel.synan@fakeemail.com', 'DYNAMICFIELD_37733': '193076', 'FIELD_48270': 'known', 'FIELD_SEARCHABLE_48270': 'known'}
+    ]
 
-    # response = top_10
+    response = top_10
     return jsonify({"response": response}), 200
 
 
+# **PDF Content Generation Endpoint**
+# Generates PDF structure and content using LLM infrastructure
+# Takes mapped JSON data and transforms it into a structured format suitable for PDF generation
+# Parameters: mapped JSON data containing the content to be processed
+# Returns: JSON response with structured PDF content
 @app.route('/api/generate_pdf_content', methods=['POST'])
 def generate_pdf_content():
     data = request.get_json()
@@ -100,14 +126,24 @@ def generate_pdf_content():
     return jsonify({"response": response}), 200
 
 class CustomPDF(FPDF):
+    # **Custom PDF Class Constructor**
+    # Initializes a custom PDF document with predefined settings
+    # Sets up auto page break, margins, and other default configurations
     def __init__(self):
         super().__init__()
         self.set_auto_page_break(auto=False)
         self.set_margins(cfg.DEFAULT_MARGIN, cfg.DEFAULT_MARGIN, cfg.DEFAULT_MARGIN)
 
+    # **Set Body Font Method**
+    # Configures the font family and size for body text in the PDF document
+    # Uses configuration settings from the pdf_config module
     def set_body_font(self):
         self.set_font(cfg.FONT_FAMILY, '', cfg.FONT_SIZE_DESCRIPTION)
 
+    # **Draw Default Header Method**
+    # Creates a standard header layout with optional image, title, and description
+    # Positions image on the left and text block aligned to the right
+    # Parameters: image_path (optional logo/image), title (main heading), description (subtitle)
     def draw_default_header(self, image_path=None, title="Default Title", description="Optional subtitle or description"):
         margin = cfg.DEFAULT_MARGIN
         y_start = self.get_y()
@@ -131,6 +167,10 @@ class CustomPDF(FPDF):
 
         self.set_y(max(y_start + cfg.IMAGE_HEIGHT_MM, self.get_y()) + cfg.LINE_SPACING)
 
+    # **Draw Header Fields Method**
+    # Creates a grid layout of labeled fields with values in rectangular boxes
+    # Automatically arranges fields in rows based on configuration settings
+    # Parameters: fields (list of dictionaries with 'label' and 'value' keys)
     def draw_header_fields(self, fields):
         self.set_font(cfg.FONT_FAMILY, size=cfg.FONT_SIZE_LABEL)
         self.set_line_width(cfg.HEADER_LINE_WIDTH)
@@ -172,6 +212,10 @@ class CustomPDF(FPDF):
         # Set final Y position with line spacing
         self.set_y(y_current + cfg.LINE_SPACING)
 
+    # **Add Boxed Content Method**
+    # Creates content sections with headers in bordered boxes
+    # Automatically handles page breaks and proper spacing
+    # Parameters: header (section title in bold), body (main content text)
     def add_boxed_content(self, header, body):
         padding = 3
         max_width = self.w - self.l_margin - self.r_margin
@@ -205,12 +249,15 @@ class CustomPDF(FPDF):
 
 
 
+# **PDF Generation Endpoint**
+# Creates and returns a PDF document based on provided content structure
+# Combines header fields, content sections, and default header into a formatted PDF
+# Parameters: headerFields (form fields), content (sections), defaultHeader (title area)
+# Returns: PDF file as downloadable attachment or error message
 @app.route('/api/generate-pdf', methods=['POST'])
 def generate_pdf():
     try:
         data = request.get_json()
-        print('request', request)
-        print('data', data)
         header_fields = data.get("headerFields", [])
         content_sections = data.get("content", [])
         default_header = data.get("defaultHeader", {})
@@ -241,6 +288,11 @@ def generate_pdf():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# **Datalist Selection Endpoint**
+# Handles datalist selection and returns mock top 10 results
+# Provides sample data for testing and development purposes
+# Parameters: selected (the datalist identifier chosen by the user)
+# Returns: JSON response with selection confirmation and sample data
 @app.route('/api/datalist', methods=['POST'])
 def datalist():
     data = request.get_json()
@@ -261,6 +313,12 @@ def datalist():
         'top10': top_10
     }), 200
 
+# **Field ID Mapper Function**
+# Transforms raw elasticsearch data by replacing FIELD_[number] keys with human-readable labels
+# Uses the FIELD_CONFIG to map field IDs to their corresponding labels
+# Filters out searchable and dynamic fields to clean up the data structure
+# Parameters: input_object (dict with FIELD_[number] keys and values)
+# Returns: dict with field keys replaced by readable labels from configuration
 def map_elastic_search_data_by_field_id(input_object):
     """
     Takes an object with FIELD_[number] keys and replaces them with the corresponding 
@@ -313,11 +371,21 @@ def map_elastic_search_data_by_field_id(input_object):
 
     return mapped_object 
 
+# **Selected Record Summarizer Function**
+# Processes a selected record by mapping its field IDs to readable labels
+# Prepares the data for LLM processing and context setting
+# Parameters: selected (the raw record data selected by the user)
+# Returns: mapped and processed record data ready for display or further processing
 def summarize_selected(selected):
     mapped_selected = map_elastic_search_data_by_field_id(selected)
     #todo this will call victor's LLM prompt passing in selected
     return mapped_selected 
 
+# **Knowledge Base Summarizer Function**
+# Converts knowledge base data into a formatted string suitable for LLM prompts
+# Creates a JSON representation of the data with proper indentation for readability
+# Parameters: knowledge_base (dict or object containing the knowledge base data)
+# Returns: string representation of the knowledge base, or default message if empty
 def summarize_knowledge_base(knowledge_base):
     """
     Summarize the knowledge base JSON into a readable string for the LLM prompt.

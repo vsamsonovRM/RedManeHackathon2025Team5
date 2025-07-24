@@ -32,11 +32,8 @@ const sampleContent = {
 
 export async function prepareDynamicPdfContent(content) {
     try {
-    console.log('content', content);
     const response = await axios.post('/api/generate_pdf_content', content);
 
-
-    console.log('response', response);
     return response.data.response;
   } catch (error) { 
     console.error('Failed to prepare PDF content:', error);
@@ -45,23 +42,13 @@ export async function prepareDynamicPdfContent(content) {
 }
 
 export async function downloadDynamicPdf(content) {
-  console.log("downloadDynamicPdf", content);
   try {
-    // console.log('content', content);
-    // const response = await axios.post('/api/generate_pdf_content', content);
-
-
-    // console.log('response', response);
-
     const response2 = await axios.post('/api/generate-pdf', content , {
       responseType: 'blob',
       headers: {
         'Content-Type': 'application/json',
       },
     });
-
-    console.log('response2', response2);
-
 
     const blob = new Blob([response2.data], { type: 'application/pdf' });
     const url = window.URL.createObjectURL(blob);
